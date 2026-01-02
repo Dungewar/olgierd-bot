@@ -25,6 +25,9 @@ async def on_ready():
 async def say(ctx, *, message):
     await ctx.send(message)
 
+def current_log_path():
+    return f"logs/{datetime.now(timezone).strftime("%m-%d-%Y")}.txt"
+
 # where to send reminders
 target_context = None
 
@@ -64,10 +67,18 @@ async def setdelay(ctx, minutes: float):
 
 @bot.command()
 async def doing(ctx, *, message):
-    filename = datetime.now(timezone).strftime("%m-%d-%Y")
     timestamp = ctx.message.created_at.astimezone(timezone).strftime('%Y-%m-%d %H:%M:%S')
-    with open(f"logs/{filename}.txt", "a") as f:
+    with open(current_log_path(), "a") as f:
         f.write(f'{timestamp}: "{message}"\n')
     await ctx.message.add_reaction('🧀')
+
+@bot.command()
+async def today(ctx):
+    try:
+        with open(current_log_path(), "r") as f:
+            content = f.read()
+            await ctx.send(f"```{content}```")
+    except FileNotFoundError:
+        await ctx.send("file not found")
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
